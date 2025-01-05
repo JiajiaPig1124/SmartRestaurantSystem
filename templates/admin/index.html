@@ -1,0 +1,243 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block page_title %}仪表盘{% endblock %}
+
+{% block extrastyle %}
+<style>
+    .dashboard {
+        padding: 24px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 24px;
+        box-shadow: var(--box-shadow);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .stat-title {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin-bottom: 8px;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 16px;
+    }
+
+    .stat-trend {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.875rem;
+    }
+
+    .stat-trend.up { color: var(--success-color); }
+    .stat-trend.down { color: var(--danger-color); }
+
+    .chart-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+        padding: 0 24px 24px;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 20px;
+        box-shadow: var(--box-shadow);
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .chart-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-color);
+    }
+
+    .chart-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .chart-filter {
+        padding: 6px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: var(--border-radius);
+        font-size: 0.875rem;
+        color: #64748b;
+        background: white;
+        cursor: pointer;
+    }
+
+    .chart-filter:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    .ranking-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .ranking-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .ranking-item:last-child {
+        border-bottom: none;
+    }
+
+    .ranking-index {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 0.875rem;
+        margin-right: 12px;
+    }
+
+    .ranking-index.top-3 {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .ranking-content {
+        flex: 1;
+    }
+
+    .ranking-title {
+        font-weight: 500;
+        color: var(--text-color);
+        margin-bottom: 4px;
+    }
+
+    .ranking-meta {
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+
+    .ranking-value {
+        font-weight: 600;
+        color: var(--text-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="stat-card">
+        <div class="stat-title">总订单数</div>
+        <div class="stat-value">{{ total_orders }}</div>
+        <div class="stat-trend {% if order_trend >= 0 %}up{% else %}down{% endif %}">
+            <i class="fas fa-arrow-{% if order_trend >= 0 %}up{% else %}down{% endif %}"></i>
+            <span>{{ order_trend_abs }}% 较上周</span>
+        </div>
+        <div class="stat-chart">
+            {% include "admin/components/chart.html" with chart_id="orderTrend" options=order_chart height="60px" %}
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">总用户数</div>
+        <div class="stat-value">{{ total_users }}</div>
+        <div class="stat-trend {% if user_trend >= 0 %}up{% else %}down{% endif %}">
+            <i class="fas fa-arrow-{% if user_trend >= 0 %}up{% else %}down{% endif %}"></i>
+            <span>{{ user_trend_abs }}% 较上月</span>
+        </div>
+        <div class="stat-chart">
+            {% include "admin/components/chart.html" with chart_id="userTrend" options=user_chart height="60px" %}
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">总收入</div>
+        <div class="stat-value">¥{{ total_revenue|floatformat:2 }}</div>
+        <div class="stat-trend {% if revenue_trend >= 0 %}up{% else %}down{% endif %}">
+            <i class="fas fa-arrow-{% if revenue_trend >= 0 %}up{% else %}down{% endif %}"></i>
+            <span>{{ revenue_trend_abs }}% 较上月</span>
+        </div>
+        <div class="stat-chart">
+            {% include "admin/components/chart.html" with chart_id="revenueTrend" options=revenue_chart height="60px" %}
+        </div>
+    </div>
+</div>
+
+<div class="chart-row">
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">销售趋势</h3>
+            <div class="chart-actions">
+                <select class="chart-filter" id="salesPeriod">
+                    <option value="7">近7天</option>
+                    <option value="30">近30天</option>
+                    <option value="90">近90天</option>
+                </select>
+            </div>
+        </div>
+        {% include "admin/components/chart.html" with chart_id="salesTrend" options=sales_chart %}
+    </div>
+    
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">热销菜品排行</h3>
+            <div class="chart-actions">
+                <select class="chart-filter" id="rankingPeriod">
+                    <option value="today">今日</option>
+                    <option value="week">本周</option>
+                    <option value="month">本月</option>
+                </select>
+            </div>
+        </div>
+        <ul class="ranking-list">
+            {% for dish in top_dishes %}
+            <li class="ranking-item">
+                <div class="ranking-index {% if forloop.counter <= 3 %}top-3{% endif %}">{{ forloop.counter }}</div>
+                <div class="ranking-content">
+                    <div class="ranking-title">{{ dish.name }}</div>
+                    <div class="ranking-meta">销量 {{ dish.sales_count }}</div>
+                </div>
+                <div class="ranking-value">¥{{ dish.revenue|floatformat:2 }}</div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+document.getElementById('salesPeriod').addEventListener('change', function() {
+    // 处理销售趋势时间段切换
+});
+
+document.getElementById('rankingPeriod').addEventListener('change', function() {
+    // 处理排行榜时间段切换
+});
+</script>
+{% endblock %} 

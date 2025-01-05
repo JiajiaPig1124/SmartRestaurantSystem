@@ -1,0 +1,290 @@
+{% load i18n %}
+
+<nav class="sticky-nav">
+    <div class="user-info">
+        {% if user.is_authenticated %}
+            {% if user.avatar %}
+            <img src="{{ user.avatar.url }}" alt="{{ user.username }}" class="user-avatar">
+            {% else %}
+            <div class="user-avatar-placeholder">
+                <i class="fas fa-user"></i>
+            </div>
+            {% endif %}
+            <div class="user-details">
+                <div class="username">{{ user.username }}</div>
+                <div class="user-role">{% if user.is_superuser %}超级管理员{% else %}管理员{% endif %}</div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="nav-search">
+        <div class="search-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" id="nav-search-input" placeholder="搜索...">
+        </div>
+    </div>
+
+    <div class="nav-apps">
+        {% for app in available_apps %}
+        <div class="nav-app {% if app.active %}active{% endif %}">
+            <div class="app-header" data-app-label="{{ app.app_label }}">
+                <i class="fas {{ app.icon|default:'fa-folder' }}"></i>
+                <span>{{ app.name }}</span>
+                <i class="fas fa-chevron-right app-toggle"></i>
+            </div>
+            <div class="app-models {% if app.active %}show{% endif %}">
+                {% for model in app.models %}
+                <a href="{{ model.admin_url }}" class="model-link {% if model.active %}active{% endif %}">
+                    <i class="fas {{ model.icon|default:'fa-circle' }}"></i>
+                    <span>{{ model.name }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="nav-footer">
+        <a href="{% url 'admin:password_change' %}" class="footer-link">
+            <i class="fas fa-key"></i>
+            <span>修改密码</span>
+        </a>
+        <a href="{% url 'admin:logout' %}" class="footer-link">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>退出登录</span>
+        </a>
+    </div>
+</nav>
+
+<style>
+.sticky-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100vh;
+    background: white;
+    box-shadow: 2px 0 4px rgba(0,0,0,.1);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+}
+
+/* 用户信息 */
+.user-info {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.user-avatar,
+.user-avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.user-details {
+    flex: 1;
+}
+
+.username {
+    font-weight: 600;
+    color: #333;
+}
+
+.user-role {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* 搜索框 */
+.nav-search {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.search-wrapper {
+    position: relative;
+}
+
+.search-wrapper i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+}
+
+#nav-search-input {
+    width: 100%;
+    padding: 8px 12px 8px 35px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+#nav-search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* 应用列表 */
+.nav-apps {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 0;
+}
+
+.nav-app {
+    margin-bottom: 5px;
+}
+
+.app-header {
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    color: #333;
+    transition: all 0.2s;
+}
+
+.app-header:hover {
+    background: #f8f9fa;
+}
+
+.app-header i {
+    width: 20px;
+    margin-right: 10px;
+}
+
+.app-header .app-toggle {
+    margin-left: auto;
+    font-size: 0.8rem;
+    transition: transform 0.2s;
+}
+
+.nav-app.active .app-toggle {
+    transform: rotate(90deg);
+}
+
+.app-models {
+    display: none;
+    padding: 5px 0;
+}
+
+.app-models.show {
+    display: block;
+}
+
+.model-link {
+    padding: 8px 20px 8px 50px;
+    display: flex;
+    align-items: center;
+    color: #666;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.model-link:hover {
+    background: #f8f9fa;
+    color: var(--primary-color);
+}
+
+.model-link.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.model-link i {
+    width: 20px;
+    margin-right: 10px;
+    font-size: 0.9rem;
+}
+
+/* 底部链接 */
+.nav-footer {
+    padding: 15px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-around;
+}
+
+.footer-link {
+    color: #666;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.footer-link:hover {
+    background: #f8f9fa;
+    color: var(--primary-color);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .sticky-nav {
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+    }
+
+    .sticky-nav.show {
+        transform: translateX(0);
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 应用折叠/展开
+    const appHeaders = document.querySelectorAll('.app-header');
+    appHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+            const app = header.parentElement;
+            const models = app.querySelector('.app-models');
+            app.classList.toggle('active');
+            models.classList.toggle('show');
+        });
+    });
+
+    // 搜索功能
+    const searchInput = document.getElementById('nav-search-input');
+    searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const apps = document.querySelectorAll('.nav-app');
+        
+        apps.forEach(app => {
+            const appName = app.querySelector('.app-header span').textContent.toLowerCase();
+            const models = app.querySelectorAll('.model-link');
+            let found = appName.includes(searchTerm);
+            
+            models.forEach(model => {
+                const modelName = model.querySelector('span').textContent.toLowerCase();
+                if (modelName.includes(searchTerm)) {
+                    found = true;
+                    model.style.display = 'flex';
+                } else {
+                    model.style.display = 'none';
+                }
+            });
+            
+            app.style.display = found ? 'block' : 'none';
+            if (searchTerm && found) {
+                app.querySelector('.app-models').classList.add('show');
+            }
+        });
+    });
+});
+</script> 

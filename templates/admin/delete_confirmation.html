@@ -1,0 +1,210 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+.delete-confirmation {
+    max-width: 600px;
+    margin: 40px auto;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+}
+
+.delete-header {
+    background: var(--danger-color);
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.delete-header i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.delete-header h1 {
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.delete-content {
+    padding: 30px;
+}
+
+.delete-warning {
+    background: #fef2f2;
+    border-left: 4px solid var(--danger-color);
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    color: #991b1b;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.object-info {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+}
+
+.object-info h2 {
+    font-size: 1.1rem;
+    color: var(--dark-color);
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.related-objects {
+    margin-top: 20px;
+}
+
+.related-objects h3 {
+    font-size: 1rem;
+    color: #64748b;
+    margin-bottom: 10px;
+}
+
+.related-objects ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.related-objects li {
+    padding: 8px 12px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+
+.delete-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 30px;
+}
+
+.delete-actions form {
+    flex: 1;
+}
+
+.delete-actions input[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    background: var(--danger-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.delete-actions input[type="submit"]:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+.delete-actions .cancel-link {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: #f1f5f9;
+    color: #64748b;
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.delete-actions .cancel-link:hover {
+    background: #e2e8f0;
+    color: var(--dark-color);
+}
+
+/* 动画效果 */
+.delete-confirmation {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .delete-confirmation {
+        margin: 20px;
+    }
+    
+    .delete-actions {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-confirmation">
+    <div class="delete-header">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h1>{% trans "Are you sure?" %}</h1>
+    </div>
+    
+    <div class="delete-content">
+        <div class="delete-warning">
+            <i class="fas fa-exclamation-circle"></i>
+            <div>
+                {% if perms_lacking %}
+                    <p>{% blocktrans with escaped_object=object %}Deleting the {{ object_name }} '{{ escaped_object }}' would result in deleting related objects, but your account doesn't have permission to delete the following types of objects:{% endblocktrans %}</p>
+                    <ul>
+                    {% for obj in perms_lacking %}
+                        <li>{{ obj }}</li>
+                    {% endfor %}
+                    </ul>
+                {% elif protected %}
+                    <p>{% blocktrans with escaped_object=object %}Deleting the {{ object_name }} '{{ escaped_object }}' would require deleting the following protected related objects:{% endblocktrans %}</p>
+                    <ul>
+                    {% for obj in protected %}
+                        <li>{{ obj }}</li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>{% blocktrans with escaped_object=object %}Are you sure you want to delete the {{ object_name }} "{{ escaped_object }}"? All of the following related items will be deleted:{% endblocktrans %}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if not perms_lacking and not protected %}
+            <div class="object-info">
+                <h2>{% trans "Objects to be deleted" %}</h2>
+                {% include "admin/includes/object_delete_summary.html" %}
+            </div>
+            
+            <form method="post">{% csrf_token %}
+            <div class="delete-actions">
+                <input type="submit" value="{% trans 'Yes, I'm sure' %}">
+                <a href="#" class="cancel-link" onclick="window.history.back(); return false;">
+                    {% trans "No, take me back" %}
+                </a>
+            </div>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

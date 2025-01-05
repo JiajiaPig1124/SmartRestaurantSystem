@@ -1,0 +1,549 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block page_title %}{% if original %}编辑菜品{% else %}添加菜品{% endif %}{% endblock %}
+
+{% block extrastyle %}
+<style>
+/* 重置基础布局 */
+#content {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* 页面容器 */
+.page-container {
+    margin-left: 280px;
+    min-height: calc(100vh - 60px);
+    padding-top: 60px;
+    background: #f8fafc;
+}
+
+/* 顶部导航 */
+.content-header {
+    position: fixed;
+    top: 60px;
+    left: 280px;
+    right: 0;
+    height: 64px;
+    background: white;
+    z-index: 100;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.header-wrapper {
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 主内容区域 */
+.main-content {
+    padding: 104px 24px 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 表单容器 */
+.form-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+/* 表单区块 */
+.form-section {
+    padding: 32px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 24px;
+}
+
+/* 表单行 */
+.form-row {
+    margin-bottom: 20px;
+}
+
+.field-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #334155;
+    margin-bottom: 8px;
+}
+
+.field-help {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+/* 表单控件 */
+.form-control {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #1e293b;
+    background: #f8fafc;
+    transition: all 0.2s;
+}
+
+.form-control:hover {
+    border-color: #cbd5e1;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    outline: none;
+    background: white;
+}
+
+/* 图片上传 */
+.image-upload {
+    width: 100%;
+    max-width: 320px;
+    height: 240px;
+    margin: 0 auto;
+    border: 2px dashed #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.2s;
+    background: #f8fafc;
+    cursor: pointer;
+}
+
+.image-upload:hover {
+    border-color: var(--primary-color);
+    background: #f0f7ff;
+}
+
+.image-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.upload-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+}
+
+.upload-placeholder i {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+    color: #cbd5e1;
+}
+
+/* 开关按钮 */
+.switch-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e2e8f0;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--success-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+/* 按钮组 */
+.form-actions {
+    padding: 24px 32px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white !important;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #1557b0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(21,87,176,0.2);
+}
+
+.btn-secondary {
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #64748b !important;
+}
+
+.btn-secondary:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+    transform: translateY(-1px);
+}
+
+/* 表单网格 */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.form-full {
+    grid-column: 1 / -1;
+}
+
+/* 必填标记 */
+.required:after {
+    content: "*";
+    color: #ef4444;
+    margin-left: 4px;
+}
+
+/* 错误提示 */
+.errorlist {
+    list-style: none;
+    padding: 8px 12px;
+    margin: 4px 0 0;
+    background: #fef2f2;
+    border-radius: 6px;
+    color: #dc2626;
+    font-size: 0.75rem;
+}
+
+.form-row.has-error .form-control {
+    border-color: #dc2626;
+    background-color: #fef2f2;
+}
+
+/* 响应式调整 */
+@media (max-width: 1024px) {
+    .page-container {
+        margin-left: 0;
+    }
+    
+    .content-header {
+        left: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        padding: 104px 16px 24px;
+    }
+    
+    .form-section {
+        padding: 24px;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .form-actions {
+        padding: 20px;
+        flex-direction: column-reverse;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* 动画效果 */
+.form-container {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="content-header">
+        <div class="header-wrapper">
+            <h1 class="page-title">
+                <i class="fas fa-utensils"></i>
+                <span>{% if original %}编辑菜品{% else %}添加菜品{% endif %}</span>
+            </h1>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <form method="post" enctype="multipart/form-data" class="form-container">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <h2 class="section-title">基本信息</h2>
+                
+                <div class="form-row form-full">
+                    <label class="field-label">菜品图片</label>
+                    <div class="image-upload" id="imageUpload">
+                        {% if form.instance.image %}
+                            <img src="{{ form.instance.image.url }}" alt="" class="image-preview">
+                        {% else %}
+                            <div class="upload-placeholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>点击或拖拽图片上传</span>
+                            </div>
+                        {% endif %}
+                        {{ form.image }}
+                    </div>
+                    <div class="field-help">建议尺寸: 800x600px，支持 JPG、PNG 格式，文件大小不超过2MB</div>
+                    {{ form.image.errors }}
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-row">
+                        <label class="field-label required" for="id_name">菜品名称</label>
+                        <input type="text" name="name" id="id_name" class="form-control" value="{{ form.name.value|default:'' }}" required>
+                        {{ form.name.errors }}
+                    </div>
+                    
+                    <div class="form-row">
+                        <label class="field-label required" for="id_category">分类</label>
+                        <select name="category" id="id_category" class="form-control" required>
+                            <option value="">请选择分类</option>
+                            {% for choice in form.category.field.choices %}
+                                <option value="{{ choice.0 }}" {% if form.category.value == choice.0 %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {{ form.category.errors }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h2 class="section-title">价格与库存</h2>
+                
+                <div class="form-grid">
+                    <div class="form-row">
+                        <label class="field-label required" for="id_price">价格</label>
+                        <div class="price-input-wrapper">
+                            <input type="number" name="price" id="id_price" class="form-control" 
+                                   value="{{ form.price.value|default:'' }}" step="0.01" min="0" required>
+                        </div>
+                        {{ form.price.errors }}
+                    </div>
+                    
+                    <div class="form-row">
+                        <label class="field-label required" for="id_stock">库存</label>
+                        <input type="number" name="stock" id="id_stock" class="form-control" 
+                               value="{{ form.stock.value|default:'' }}" min="0" required>
+                        {{ form.stock.errors }}
+                    </div>
+                    
+                    <div class="form-row form-full">
+                        <div class="switch-wrapper">
+                            <label class="switch">
+                                <input type="checkbox" name="is_available" id="id_is_available" 
+                                       {% if form.is_available.value %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
+                            <span>是否上架销售</span>
+                        </div>
+                        {{ form.is_available.errors }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h2 class="section-title">详细信息</h2>
+                
+                <div class="form-row">
+                    <label class="field-label" for="id_description">描述</label>
+                    <textarea name="description" id="id_description" class="form-control" rows="4">{{ form.description.value|default:'' }}</textarea>
+                    <div class="field-help">简要描述菜品的特点和口味</div>
+                    {{ form.description.errors }}
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <a href="{% url 'admin:menu_dish_changelist' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    <span>取消</span>
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    <span>保存</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+// 图片上传预览增强
+const imageUpload = document.getElementById('imageUpload');
+const fileInput = imageUpload.querySelector('input[type="file"]');
+
+// 拖拽上传
+imageUpload.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    imageUpload.classList.add('dragging');
+});
+
+imageUpload.addEventListener('dragleave', () => {
+    imageUpload.classList.remove('dragging');
+});
+
+imageUpload.addEventListener('drop', (e) => {
+    e.preventDefault();
+    imageUpload.classList.remove('dragging');
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        fileInput.files = e.dataTransfer.files;
+        handleFileSelect(e.dataTransfer.files[0]);
+    }
+});
+
+// 点击上传
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+        handleFileSelect(e.target.files[0]);
+    }
+});
+
+function handleFileSelect(file) {
+    // 检查文件类型
+    if (!file.type.match('image.*')) {
+        alert('请选择图片文件');
+        return;
+    }
+    
+    // 检查文件大小
+    if (file.size > 2 * 1024 * 1024) {
+        alert('图片大小不能超过2MB');
+        return;
+    }
+    
+    const reader = new FileReader();
+    const uploadPlaceholder = imageUpload.querySelector('.upload-placeholder');
+    const preview = imageUpload.querySelector('.image-preview') || new Image();
+    
+    preview.classList.add('image-preview');
+    reader.onload = (e) => {
+        preview.src = e.target.result;
+        if (uploadPlaceholder) {
+            uploadPlaceholder.replaceWith(preview);
+        }
+    };
+    
+    reader.readAsDataURL(file);
+}
+
+// 表单验证
+document.querySelector('form').addEventListener('submit', function(e) {
+    const requiredFields = this.querySelectorAll('input[required], select[required], textarea[required]');
+    let isValid = true;
+    
+    requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+            isValid = false;
+            field.classList.add('error');
+            field.closest('.form-row').classList.add('has-error');
+        } else {
+            field.classList.remove('error');
+            field.closest('.form-row').classList.remove('has-error');
+        }
+    });
+    
+    if (!isValid) {
+        e.preventDefault();
+        alert('请填写所有必填字段');
+    }
+});
+</script>
+{% endblock %} 

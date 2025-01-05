@@ -1,0 +1,128 @@
+{% load i18n %}
+
+<div class="filter-wrapper">
+    <div class="filter-header">
+        <i class="fas fa-filter"></i>
+        <h3>{% trans 'Filter' %}</h3>
+    </div>
+    
+    {% for spec in cl.filter_specs %}
+    <div class="filter-group">
+        <div class="filter-title">{{ spec.title }}</div>
+        {{ spec.choices }}
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+.filter-wrapper {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.filter-header {
+    background: var(--primary-color);
+    color: white;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.filter-group {
+    padding: 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.filter-group:last-child {
+    border-bottom: none;
+}
+
+.filter-title {
+    font-weight: 500;
+    color: #1e293b;
+    margin-bottom: 12px;
+}
+
+/* 过滤选项样式 */
+.filter-group ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.filter-group li {
+    margin: 8px 0;
+}
+
+.filter-group li.selected {
+    font-weight: 500;
+}
+
+.filter-group li a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    color: #64748b;
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.filter-group li a:hover {
+    background: #f1f5f9;
+    color: var(--primary-color);
+}
+
+.filter-group li.selected a {
+    background: #e0e7ff;
+    color: var(--primary-color);
+}
+
+/* 计数器样式 */
+.filter-count {
+    background: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-left: auto;
+}
+</style>
+
+{% block filters %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 为过滤选项添加计数器和图标
+    const filterLinks = document.querySelectorAll('.filter-group li a');
+    filterLinks.forEach(link => {
+        // 提取计数
+        const text = link.textContent;
+        const count = text.match(/\((\d+)\)/);
+        if (count) {
+            const countSpan = document.createElement('span');
+            countSpan.className = 'filter-count';
+            countSpan.textContent = count[1];
+            link.innerHTML = link.innerHTML.replace(/\(\d+\)/, '');
+            link.appendChild(countSpan);
+        }
+        
+        // 添加图标
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-circle';
+        icon.style.fontSize = '0.5rem';
+        link.insertBefore(icon, link.firstChild);
+    });
+});
+</script>
+{% endblock %} 

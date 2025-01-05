@@ -1,0 +1,511 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }} | 智能餐饮管理系统{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+:root {
+    --primary-color: #1a73e8;
+    --secondary-color: #f8f9fa;
+    --success-color: #34a853;
+    --danger-color: #ea4335;
+    --warning-color: #fbbc05;
+    --border-radius: 8px;
+    --box-shadow: 0 2px 4px rgba(0,0,0,.1);
+    --transition: all 0.3s ease;
+}
+
+/* 修复布局问题 */
+#container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* 侧边栏样式 */
+#nav-sidebar {
+    width: 280px;
+    background: white;
+    border-right: 1px solid #e2e8f0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 1000;
+    padding-top: 60px; /* 为顶部留出空间 */
+}
+
+/* 导航菜单样式 */
+.nav-sidebar {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.nav-sidebar .nav-label {
+    display: block;
+    padding: 12px 20px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #64748b;
+}
+
+.nav-sidebar .nav-item {
+    margin: 0 !important;
+}
+
+.nav-sidebar .nav-link {
+    display: flex !important;
+    align-items: center;
+    padding: 12px 20px !important;
+    color: #1e293b !important;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.nav-sidebar .nav-link:hover {
+    background: #f1f5f9;
+    color: var(--primary-color) !important;
+}
+
+.nav-sidebar .nav-link.active {
+    background: #e0e7ff;
+    color: var(--primary-color) !important;
+    font-weight: 500;
+}
+
+.nav-sidebar .nav-icon {
+    width: 20px;
+    margin-right: 8px;
+    text-align: center;
+}
+
+/* 应用组样式 */
+.app-item {
+    margin-bottom: 10px;
+}
+
+.app-item .section {
+    padding: 10px 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.app-item .section i {
+    width: 20px;
+    text-align: center;
+}
+
+.model-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.model-list a {
+    display: flex;
+    align-items: center;
+    padding: 8px 20px 8px 48px;
+    color: #1e293b;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: var(--transition);
+}
+
+.model-list a:hover {
+    background: #f1f5f9;
+    color: var(--primary-color);
+}
+
+.model-list a.selected {
+    background: #e0e7ff;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* 修复顶部导航与内容的间距 */
+#header {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 280px;
+    background: var(--primary-color);
+    padding: 0 2rem;
+    z-index: 900;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+    color: white;
+}
+
+/* 系统标题样式 */
+#branding h1 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+#branding h1 a {
+    color: white !important;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#branding h1 a:hover {
+    opacity: 0.9;
+}
+
+#main {
+    margin-left: 280px;
+    padding: 80px 20px 20px; /* 增加顶部内边距 */
+    background: #f1f5f9;
+    min-height: 100vh;
+}
+
+/* 面包屑导航 */
+.breadcrumbs {
+    margin-top: 20px;
+    background: white;
+    padding: 12px 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.breadcrumbs a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.breadcrumbs .divider {
+    color: #94a3b8;
+    margin: 0 4px;
+}
+
+/* 用户菜单 */
+.user-menu {
+    position: relative;
+}
+
+.user-menu-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px 16px;
+    border-radius: 30px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.user-menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.user-menu-toggle i {
+    font-size: 1.1rem;
+}
+
+.user-menu-content {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    min-width: 200px;
+    display: none;
+    z-index: 1000;
+    animation: slideDown 0.2s ease-out;
+}
+
+.user-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 12px 16px;
+    color: #1e293b;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.user-menu-item:hover {
+    background: #f8fafc;
+    color: var(--primary-color);
+}
+
+.user-menu-item i {
+    width: 16px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.user-menu.active .user-menu-content {
+    display: block;
+}
+
+/* 内容区域样式 */
+.content-wrapper {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+    margin-top: 20px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    #nav-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    #nav-sidebar.show {
+        transform: translateX(0);
+    }
+    
+    #main, #header {
+        margin-left: 0;
+    }
+    
+    .nav-toggle {
+        display: flex;
+    }
+    
+    .user-menu-toggle span {
+        display: none;
+    }
+}
+
+/* 导航切换按钮 */
+.nav-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-right: 1rem;
+}
+
+.nav-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* 快捷操作按钮 */
+.quick-actions {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    z-index: 1000;
+}
+
+.quick-action-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: white;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: var(--box-shadow);
+    cursor: pointer;
+    transition: var(--transition);
+    border: none;
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,.15);
+}
+
+/* 修复表格样式 */
+#changelist-form {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-top: 20px;
+    overflow: hidden;
+}
+
+#changelist table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#changelist table thead th {
+    background: #f8fafc;
+    padding: 12px;
+    border-bottom: 2px solid #e2e8f0;
+    font-weight: 600;
+}
+
+#changelist table tbody td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+/* 修复分页样式 */
+.paginator {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.paginator a, .paginator span {
+    padding: 8px 12px;
+    border-radius: var(--border-radius);
+    background: white;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.paginator .this-page {
+    background: var(--primary-color);
+    color: white;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %}
+
+{% block branding %}
+<div class="header-content">
+    <button class="nav-toggle" id="navToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    <h1 id="site-name">
+        <a href="{% url 'admin:index' %}">
+            <i class="fas fa-utensils"></i>
+            <span>智能餐饮管理系统</span>
+        </a>
+    </h1>
+</div>
+{% endblock %}
+
+{% block usertools %}
+<div class="header-actions">
+    <div class="user-menu">
+        <div class="user-menu-toggle" id="userMenuToggle">
+            <i class="fas fa-user-circle"></i>
+            <span>{{ request.user.username }}</span>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="user-menu-content">
+            <a href="{% url 'admin:password_change' %}" class="user-menu-item">
+                <i class="fas fa-key"></i>
+                <span>修改密码</span>
+            </a>
+            <a href="{% url 'admin:logout' %}" class="user-menu-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>退出登录</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block footer %}
+<div class="quick-actions">
+    <button class="quick-action-btn" id="scrollTop" title="返回顶部">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+    {% if has_add_permission %}
+    <a href="{% url 'admin:index' %}" class="quick-action-btn" title="添加">
+        <i class="fas fa-plus"></i>
+    </a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 用户菜单切换
+    const userMenuToggle = document.getElementById('userMenuToggle');
+    const userMenu = document.querySelector('.user-menu');
+    
+    userMenuToggle?.addEventListener('click', () => {
+        userMenu.classList.toggle('active');
+    });
+
+    // 点击外部关闭用户菜单
+    document.addEventListener('click', (e) => {
+        if (!userMenu?.contains(e.target)) {
+            userMenu?.classList.remove('active');
+        }
+    });
+
+    // 导航栏切换
+    const navToggle = document.getElementById('navToggle');
+    const navSidebar = document.getElementById('nav-sidebar');
+    
+    navToggle?.addEventListener('click', () => {
+        navSidebar?.classList.toggle('show');
+    });
+
+    // 返回顶部按钮
+    const scrollTopBtn = document.getElementById('scrollTop');
+    
+    window.addEventListener('scroll', () => {
+        if (window.pageYOffset > 100) {
+            scrollTopBtn.style.display = 'flex';
+        } else {
+            scrollTopBtn.style.display = 'none';
+        }
+    });
+
+    scrollTopBtn?.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+
+    // 表格行动画
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach((row, index) => {
+        row.style.animation = `fadeIn 0.3s ease-out ${index * 0.05}s forwards`;
+        row.style.opacity = '0';
+    });
+});
+</script>
+{% endblock %} 

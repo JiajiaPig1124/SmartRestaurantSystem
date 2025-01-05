@@ -1,0 +1,339 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+/* 列表页面容器 */
+.content-wrapper {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin: 20px;
+    padding: 20px;
+}
+
+/* 工具栏样式 */
+#toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: var(--border-radius);
+}
+
+.search-wrapper {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-wrapper i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+
+#searchbar {
+    width: 100%;
+    padding: 10px 12px 10px 35px;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+#searchbar:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+}
+
+/* 过滤器样式 */
+#changelist-filter {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+    margin-left: 20px;
+    width: 260px;
+}
+
+#changelist-filter h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #edf2f7;
+}
+
+#changelist-filter h3 {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin: 15px 0 8px;
+}
+
+#changelist-filter ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#changelist-filter li {
+    margin: 5px 0;
+}
+
+#changelist-filter a {
+    color: #64748b;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 4px;
+    transition: var(--transition);
+}
+
+#changelist-filter a:hover {
+    background: #f1f5f9;
+    color: var(--primary-color);
+}
+
+#changelist-filter li.selected a {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* 操作按钮组 */
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+}
+
+.actions select {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--border-radius);
+    background: white;
+    min-width: 200px;
+}
+
+.actions .button {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+}
+
+/* 分页样式 */
+.paginator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: var(--border-radius);
+}
+
+.paginator a, .paginator span {
+    padding: 8px 12px;
+    border-radius: 4px;
+    color: #64748b;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.paginator a:hover {
+    background: #e2e8f0;
+    color: var(--primary-color);
+}
+
+.paginator .this-page {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* 表格增强 */
+#result_list {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#result_list th {
+    position: sticky;
+    top: 60px;
+    background: white;
+    z-index: 10;
+}
+
+#result_list th a {
+    color: var(--dark-color);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#result_list th a:hover {
+    color: var(--primary-color);
+}
+
+#result_list tbody tr {
+    transition: var(--transition);
+}
+
+#result_list tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* 空状态样式 */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #64748b;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    color: #94a3b8;
+}
+
+/* 选择框样式 */
+.action-checkbox-column input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #e2e8f0;
+    border-radius: 4px;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.action-checkbox-column input[type="checkbox"]:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* 添加按钮增强 */
+.addlink {
+    position: fixed;
+    right: 30px;
+    bottom: 30px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,.1);
+    transition: var(--transition);
+    z-index: 100;
+}
+
+.addlink:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0,0,0,.15);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    {% if cl.search_fields %}
+    <div id="toolbar">
+        <div class="search-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchbar" placeholder="搜索{{ cl.opts.verbose_name }}...">
+        </div>
+        {% block object-tools %}
+            {% if has_add_permission %}
+                <div class="object-tools">
+                    {% block object-tools-items %}
+                        {% url cl.opts|admin_urlname:'add' as add_url %}
+                        <a href="{% add_preserved_filters add_url is_popup to_field %}" class="addlink">
+                            <i class="fas fa-plus"></i>
+                        </a>
+                    {% endblock %}
+                </div>
+            {% endif %}
+        {% endblock %}
+    </div>
+    {% endif %}
+
+    {% block result_list %}
+        {% if cl.result_count %}
+            {% if action_form and actions_on_top and cl.show_admin_actions %}
+                <div class="actions">
+                    {% admin_actions %}
+                </div>
+            {% endif %}
+            <div class="results">
+                {% result_list cl %}
+            </div>
+            {% if action_form and actions_on_bottom and cl.show_admin_actions %}
+                <div class="actions">
+                    {% admin_actions %}
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h3>暂无{{ cl.opts.verbose_name }}</h3>
+                <p>点击右下角的添加按钮创建新的{{ cl.opts.verbose_name }}</p>
+            </div>
+        {% endif %}
+    {% endblock %}
+
+    {% block pagination %}
+        {% pagination cl %}
+    {% endblock %}
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 表格行动画
+    const rows = document.querySelectorAll('#result_list tbody tr');
+    rows.forEach((row, index) => {
+        row.style.animation = `fadeInUp 0.3s ease forwards ${index * 0.05}s`;
+        row.style.opacity = '0';
+    });
+
+    // 搜索框增强
+    const searchInput = document.getElementById('searchbar');
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(function(e) {
+            const searchParams = new URLSearchParams(window.location.search);
+            searchParams.set('q', e.target.value);
+            window.location.search = searchParams.toString();
+        }, 500));
+    }
+
+    // 防抖函数
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,215 @@
+{% load i18n static %}
+{% if result_hidden_fields %}
+<div class="hiddenfields">{# DIV for HTML validation #}
+{% for item in result_hidden_fields %}{{ item }}{% endfor %}
+</div>
+{% endif %}
+
+<div class="results">
+    <div class="table-responsive">
+        <table id="result_list" class="table">
+            <thead>
+                <tr>
+                    {% for header in result_headers %}
+                    <th scope="col" {{ header.class_attrib }}>
+                        {% if header.sortable %}
+                            {% if header.sort_priority > 0 %}
+                                <div class="sortoptions">
+                                    <a class="sortremove" href="{{ header.url_remove }}" title="{% trans "Remove from sorting" %}">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                    {% if num_sorted_fields > 1 %}<span class="sortpriority" title="{% trans "Sorting priority: %(priority_number)s" %}">{{ header.sort_priority }}</span>{% endif %}
+                                    <a href="{{ header.url_toggle }}" class="toggle {% if header.ascending %}ascending{% else %}descending{% endif %}" title="{% trans "Toggle sorting" %}">
+                                        <i class="fas {% if header.ascending %}fa-sort-up{% else %}fa-sort-down{% endif %}"></i>
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                        <div class="text">
+                            {% if header.sortable %}<a href="{{ header.url_primary }}">{{ header.text|capfirst }}</a>{% else %}{{ header.text|capfirst }}{% endif %}
+                        </div>
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr class="{% cycle 'row1' 'row2' %}">
+                    {% for item in result %}{{ item }}{% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+/* 表格样式优化 */
+.results {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin: 20px 0;
+    overflow: hidden;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    margin: 0;
+}
+
+.table {
+    width: 100%;
+    margin-bottom: 0;
+    background: white;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* 表头样式 */
+.table thead th {
+    background: #f8fafc;
+    padding: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
+    position: relative;
+}
+
+.table thead th .text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.table thead th a {
+    color: #1e293b;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 排序选项样式 */
+.sortoptions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    float: right;
+}
+
+.sortremove, .toggle {
+    color: #94a3b8;
+    text-decoration: none;
+    padding: 4px;
+    border-radius: 4px;
+    transition: var(--transition);
+}
+
+.sortremove:hover, .toggle:hover {
+    background: #e2e8f0;
+    color: var(--danger-color);
+}
+
+.toggle.ascending:hover, .toggle.descending:hover {
+    color: var(--primary-color);
+}
+
+.sortpriority {
+    background: #e2e8f0;
+    color: #64748b;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+}
+
+/* 表格内容样式 */
+.table tbody td {
+    padding: 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 交替行颜色 */
+.table tbody tr:nth-child(even) {
+    background: #f8fafc;
+}
+
+/* 悬停效果 */
+.table tbody tr:hover {
+    background: #f1f5f9;
+}
+
+/* 操作按钮样式 */
+.table .action-checkbox {
+    width: 48px;
+    text-align: center;
+}
+
+.table .action-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 2px solid #cbd5e1;
+    transition: var(--transition);
+}
+
+.table .action-checkbox input[type="checkbox"]:checked {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* 链接样式 */
+.table td a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.table td a:hover {
+    color: #1557b0;
+}
+
+/* 状态标签 */
+.status-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .table thead th, .table tbody td {
+        padding: 12px;
+    }
+    
+    .sortoptions {
+        display: none;
+    }
+}
+</style> 

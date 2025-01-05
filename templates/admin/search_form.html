@@ -1,0 +1,86 @@
+{% load i18n static %}
+{% if cl.search_fields %}
+<div class="search-wrapper">
+    <form id="changelist-search" method="get">
+        <div class="search-group">
+            <i class="fas fa-search"></i>
+            <input type="text" 
+                   name="{{ search_var }}" 
+                   value="{{ cl.query }}" 
+                   id="searchbar" 
+                   placeholder="{% trans 'Search' %}"
+            >
+            {% if show_result_count %}
+                <span class="small quiet">{% blocktrans count counter=cl.result_count %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktrans %}</span>
+            {% endif %}
+            <button type="submit" class="search-submit">
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+        {% for pair in cl.params.items %}
+            {% if pair.0 != search_var %}<input type="hidden" name="{{ pair.0 }}" value="{{ pair.1 }}">{% endif %}
+        {% endfor %}
+    </form>
+</div>
+
+<style>
+.search-wrapper {
+    margin-bottom: 20px;
+}
+
+.search-group {
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 8px 16px;
+    gap: 12px;
+}
+
+.search-group i {
+    color: #94a3b8;
+}
+
+#searchbar {
+    flex: 1;
+    border: none;
+    padding: 8px 0;
+    font-size: 1rem;
+    color: #1e293b;
+    background: transparent;
+}
+
+#searchbar:focus {
+    outline: none;
+}
+
+#searchbar::placeholder {
+    color: #94a3b8;
+}
+
+.search-submit {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.search-submit:hover {
+    background: #1557b0;
+    transform: translateX(2px);
+}
+
+.small.quiet {
+    color: #64748b;
+    font-size: 0.875rem;
+}
+</style>
+{% endif %} 

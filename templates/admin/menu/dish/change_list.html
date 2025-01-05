@@ -1,0 +1,603 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block page_title %}菜品管理{% endblock %}
+
+{% block extrastyle %}
+<style>
+/* 重置基础布局 */
+#content {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.page-container {
+    margin-left: 280px;
+    min-height: calc(100vh - 60px);
+    padding-top: 60px;
+    background: #f8fafc;
+}
+
+/* 顶部导航 */
+.content-header {
+    position: fixed;
+    top: 60px;
+    left: 280px;
+    right: 0;
+    height: 64px;
+    background: white;
+    z-index: 100;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.header-wrapper {
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.page-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-color);
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.page-title i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    opacity: 0.9;
+}
+
+/* 主内容区域 */
+.main-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 88px 24px 24px;
+}
+
+/* 工具栏样式 */
+.toolbar {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 280px;
+    max-width: 360px;
+    position: relative;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 10px 16px 10px 42px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    background: #f8fafc;
+}
+
+.search-box i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 0.875rem;
+}
+
+.search-box input:focus {
+    background: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    outline: none;
+}
+
+.filter-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    flex: 2;
+    justify-content: flex-end;
+}
+
+.filter-select {
+    min-width: 160px;
+    max-width: 200px;
+    width: auto;
+    flex: 1;
+    padding: 9px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #64748b;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-select:hover {
+    border-color: #cbd5e1;
+}
+
+.filter-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    outline: none;
+}
+
+/* 按钮样式 */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white !important;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #1557b0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(21,87,176,0.2);
+}
+
+/* 菜品网格布局 */
+.dish-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.dish-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: all 0.3s;
+    position: relative;
+}
+
+.dish-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+}
+
+.dish-image {
+    position: relative;
+    padding-top: 66.67%;
+    background: #f8fafc;
+    overflow: hidden;
+}
+
+.dish-image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.dish-card:hover .dish-image img {
+    transform: scale(1.05);
+}
+
+.dish-image-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 2rem;
+    background: #f1f5f9;
+}
+
+.dish-actions {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s;
+}
+
+.dish-card:hover .dish-actions {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 8px;
+    color: #64748b;
+    transition: all 0.2s;
+    text-decoration: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.action-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.action-btn.delete:hover {
+    background: var(--danger-color);
+}
+
+.dish-content {
+    padding: 16px 20px;
+}
+
+.dish-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 12px;
+}
+
+.dish-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.dish-status {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.status-active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-inactive {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.dish-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.meta-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.meta-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.meta-value.price {
+    color: #ef4444;
+}
+
+.meta-value.low-stock {
+    color: #ef4444;
+}
+
+/* 空状态样式 */
+.empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: #94a3b8;
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    font-size: 1.25rem;
+    color: var(--text-color);
+    margin: 0 0 8px;
+}
+
+.empty-state p {
+    color: #64748b;
+    margin: 0;
+}
+
+/* 分页样式 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 24px 0;
+}
+
+.page-btn {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    color: #64748b;
+    text-decoration: none;
+    transition: all 0.2s;
+    min-width: 40px;
+    text-align: center;
+}
+
+.page-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: #f0f7ff;
+}
+
+.page-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* 响应式调整 */
+@media (max-width: 1024px) {
+    .page-container {
+        margin-left: 0;
+    }
+    
+    .content-header {
+        left: 0;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+
+    .search-box {
+        max-width: none;
+    }
+
+    .filter-group {
+        justify-content: stretch;
+    }
+
+    .filter-select {
+        max-width: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .toolbar {
+        padding: 16px;
+    }
+    
+    .filter-group {
+        flex-direction: column;
+    }
+    
+    .filter-select {
+        width: 100%;
+        max-width: none;
+    }
+    
+    .dish-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="content-header">
+        <div class="header-wrapper">
+            <h1 class="page-title">
+                <i class="fas fa-utensils"></i>
+                <span>菜品管理</span>
+            </h1>
+            <a href="{% url 'admin:menu_dish_add' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                <span>添加菜品</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="toolbar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="搜索菜品..." value="{{ request.GET.q }}">
+            </div>
+            
+            <div class="filter-group">
+                <select class="filter-select" id="categoryFilter">
+                    <option value="">全部分类</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if request.GET.category == category.id %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                
+                <select class="filter-select" id="statusFilter">
+                    <option value="">全部状态</option>
+                    <option value="1" {% if request.GET.status == '1' %}selected{% endif %}>在售</option>
+                    <option value="0" {% if request.GET.status == '0' %}selected{% endif %}>已下架</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="dish-grid">
+            {% for dish in object_list %}
+            <div class="dish-card">
+                <div class="dish-image">
+                    {% if dish.image %}
+                        <img src="{{ dish.image.url }}" alt="{{ dish.name }}">
+                    {% else %}
+                        <div class="dish-image-placeholder">
+                            <i class="fas fa-image"></i>
+                        </div>
+                    {% endif %}
+                    <div class="dish-actions">
+                        <a href="{% url 'admin:menu_dish_change' dish.id %}" class="action-btn" title="编辑">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'admin:menu_dish_delete' dish.id %}" class="action-btn delete" title="删除">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="dish-content">
+                    <div class="dish-header">
+                        <h3 class="dish-name">{{ dish.name }}</h3>
+                        <span class="dish-status {% if dish.is_available %}status-active{% else %}status-inactive{% endif %}">
+                            {{ dish.is_available|yesno:"在售,已下架" }}
+                        </span>
+                    </div>
+                    
+                    <div class="dish-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">价格</span>
+                            <span class="meta-value price">¥{{ dish.price }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">库存</span>
+                            <span class="meta-value {% if dish.stock < 10 %}low-stock{% endif %}">
+                                {{ dish.stock }}
+                            </span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">销量</span>
+                            <span class="meta-value">{{ dish.sales_count }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fas fa-utensils"></i>
+                <h3>暂无菜品</h3>
+                <p>点击右上角的"添加菜品"按钮开始添加</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if is_paginated %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1" class="page-btn">首页</a>
+                <a href="?page={{ page_obj.previous_page_number }}" class="page-btn">上一页</a>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <a href="?page={{ num }}" class="page-btn active">{{ num }}</a>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}" class="page-btn">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="page-btn">下一页</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="page-btn">末页</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+// 搜索防抖
+const searchInput = document.querySelector('.search-box input');
+let timeout;
+searchInput.addEventListener('input', function() {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+        const params = new URLSearchParams(window.location.search);
+        params.set('q', this.value);
+        window.location.search = params.toString();
+    }, 500);
+});
+
+// 过滤器切换
+document.getElementById('categoryFilter').addEventListener('change', function() {
+    const params = new URLSearchParams(window.location.search);
+    if (this.value) {
+        params.set('category', this.value);
+    } else {
+        params.delete('category');
+    }
+    window.location.search = params.toString();
+});
+
+document.getElementById('statusFilter').addEventListener('change', function() {
+    const params = new URLSearchParams(window.location.search);
+    if (this.value) {
+        params.set('status', this.value);
+    } else {
+        params.delete('status');
+    }
+    window.location.search = params.toString();
+});
+</script>
+{% endblock %} 
