@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>我的评价</h2>
+    {% for review in reviews %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title">订单号：{{ review.order.order_number }}</h5>
+                <span class="text-muted">{{ review.created_at|date:"Y-m-d H:i" }}</span>
+            </div>
+            <div class="rating mb-2">
+                评分：{{ review.get_rating_display }}
+            </div>
+            <p class="card-text">{{ review.comment }}</p>
+            {% if review.images.exists %}
+            <div class="review-images mb-3">
+                {% for image in review.images.all %}
+                <img src="{{ image.image.url }}" alt="评价图片" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% if review.reply %}
+            <div class="merchant-reply mt-3 p-3 bg-light">
+                <strong>商家回复：</strong>
+                <p class="mb-0">{{ review.reply.content }}</p>
+                <small class="text-muted">{{ review.reply.created_at|date:"Y-m-d H:i" }}</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <p>暂无评价记录</p>
+    {% endfor %}
+</div>
+{% endblock %} 

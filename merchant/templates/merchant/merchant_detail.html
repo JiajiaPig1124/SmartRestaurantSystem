@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <!-- 商家基本信息 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    {% if merchant.logo %}
+                    <img src="{{ merchant.logo.url }}" alt="{{ merchant.name }}" class="img-fluid rounded shadow">
+                    {% else %}
+                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 300px;">
+                        <i class="fas fa-store fa-4x text-muted"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-8">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="mb-0">{{ merchant.name }}</h2>
+                        <span class="badge {% if merchant.is_active %}bg-success{% else %}bg-danger{% endif %} fs-6">
+                            {{ merchant.is_active|yesno:"营业中,休息中" }}
+                        </span>
+                    </div>
+                    <p class="text-muted mb-4">{{ merchant.description }}</p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                <span>{{ merchant.address }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-phone text-primary me-2"></i>
+                                <span>{{ merchant.phone }}</span>
+                            </div>
+                        </div>
+                        {% if merchant.email %}
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-envelope text-primary me-2"></i>
+                                <span>{{ merchant.email }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 营业时间 -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clock me-2"></i>营业时间
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody>
+                                {% for hours in business_hours %}
+                                <tr>
+                                    <td width="120">{{ hours.get_weekday_display }}</td>
+                                    <td>
+                                        {% if hours.is_closed %}
+                                        <span class="text-danger">休息</span>
+                                        {% else %}
+                                        {{ hours.opening_time|time:"H:i" }} - {{ hours.closing_time|time:"H:i" }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 商家公告 -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bullhorn me-2"></i>商家公告
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if announcements %}
+                    <div class="announcement-list">
+                        {% for announcement in announcements %}
+                        <div class="announcement-item mb-3">
+                            <h6 class="mb-2">{{ announcement.title }}</h6>
+                            <p class="mb-1">{{ announcement.content }}</p>
+                            <small class="text-muted">{{ announcement.created_at|date:"Y-m-d H:i" }}</small>
+                        </div>
+                        {% if not forloop.last %}<hr>{% endif %}
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center mb-0">暂无公告</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 优惠活动 -->
+    {% if promotions %}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-gift me-2"></i>优惠活动
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                {% for promotion in promotions %}
+                <div class="col-md-4">
+                    <div class="promotion-card">
+                        <div class="promotion-type">
+                            <span class="badge bg-primary">{{ promotion.get_promotion_type_display }}</span>
+                        </div>
+                        <h5>{{ promotion.title }}</h5>
+                        <p>{{ promotion.description }}</p>
+                        <div class="promotion-details">
+                            {% if promotion.promotion_type == 'discount' %}
+                            <p class="mb-2">折扣：{{ promotion.discount_value|floatformat:2 }}折</p>
+                            {% elif promotion.promotion_type == 'reduction' %}
+                            <p class="mb-2">满{{ promotion.minimum_amount }}减{{ promotion.reduction_amount }}</p>
+                            {% endif %}
+                            <small class="text-muted">
+                                {{ promotion.start_time|date:"Y-m-d" }} 至 {{ promotion.end_time|date:"Y-m-d" }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 评价列表 -->
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-comments me-2"></i>顾客评价
+            </h5>
+            {% if user.is_authenticated %}
+            <a href="{% url 'merchant:merchant_review' merchant.id %}" class="btn btn-light btn-sm">
+                写评价
+            </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if merchant.review_set.exists %}
+            <div class="review-list">
+                {% for review in merchant.review_set.all %}
+                <div class="review-item mb-4">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="mb-1">{{ review.user.username }}</h6>
+                            <div class="rating">
+                                {% for i in "12345"|make_list %}
+                                <i class="fas fa-star {% if forloop.counter <= review.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <small class="text-muted">{{ review.created_at|date:"Y-m-d H:i" }}</small>
+                    </div>
+                    <p class="mb-3">{{ review.comment }}</p>
+                    {% if review.reviewreply_set.exists %}
+                    <div class="merchant-reply ms-4 p-3 bg-light rounded">
+                        <small class="text-primary">商家回复：</small>
+                        <p class="mb-0">{{ review.reviewreply_set.first.content }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if not forloop.last %}<hr>{% endif %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="far fa-comment-dots fa-3x text-muted mb-3"></i>
+                <h5>暂无评价</h5>
+                <p class="text-muted">还没有顾客评价，来为Ta写第一条评价吧</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .promotion-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        height: 100%;
+        transition: transform 0.2s;
+    }
+    
+    .promotion-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .promotion-type {
+        margin-bottom: 15px;
+    }
+    
+    .review-item {
+        transition: background-color 0.2s;
+    }
+    
+    .review-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .merchant-reply {
+        border-left: 3px solid var(--primary-color);
+    }
+    
+    .rating {
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+{% endblock %} 

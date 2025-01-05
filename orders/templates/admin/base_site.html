@@ -1,0 +1,154 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extrastyle %}
+<style>
+/* 整体布局 */
+#container {
+    width: 100%;
+    min-width: 1200px;
+    padding: 0 20px;
+}
+
+/* 侧边栏样式 */
+#header {
+    background: #205081;
+    color: white;
+    padding: 15px 20px;
+}
+
+#branding h1 {
+    color: white;
+}
+
+.module h2, .module caption {
+    background: #205081;
+    color: white;
+    padding: 8px;
+}
+
+/* 导航菜单样式 */
+.object-tools {
+    margin-top: 15px;
+}
+
+/* 列表视图样式 */
+#changelist {
+    width: 100%;
+    margin-top: 20px;
+}
+
+#changelist table {
+    width: 100%;
+    border-spacing: 0;
+    border-collapse: separate;
+}
+
+#changelist table thead th {
+    padding: 10px;
+    background: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+}
+
+#changelist table tbody td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+/* 表单样式 */
+.form-row {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.form-row label {
+    width: 200px;
+    display: inline-block;
+}
+
+/* 分组样式 */
+.inline-group {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.inline-group h2 {
+    margin-top: 0;
+}
+
+/* 按钮样式 */
+.submit-row {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: right;
+}
+
+.submit-row input {
+    margin-left: 10px;
+    padding: 8px 15px;
+}
+
+/* 修复重叠问题 */
+.inline-related {
+    position: relative;
+    margin: 10px 0;
+    padding: 10px;
+    background: white;
+    border: 1px solid #ddd;
+}
+
+.inline-related h3 {
+    margin-top: 0;
+}
+
+/* 修复表格布局 */
+.results table {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.results table th,
+.results table td {
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid #ddd;
+}
+
+/* 修复过滤器样式 */
+#changelist-filter {
+    position: relative;
+    float: right;
+    width: 240px;
+    margin-left: 20px;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* 修复搜索框样式 */
+#changelist-search {
+    margin-bottom: 20px;
+}
+
+#changelist-search input[type="text"] {
+    padding: 5px;
+    width: 260px;
+}
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">智能餐饮管理系统</a>
+</h1>
+{% endblock %} 

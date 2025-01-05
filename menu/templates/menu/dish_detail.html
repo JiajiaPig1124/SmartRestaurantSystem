@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'menu:dish_list' %}">菜单</a></li>
+            <li class="breadcrumb-item"><a href="?cuisine={{ dish.cuisine.id }}">{{ dish.cuisine.name }}</a></li>
+            <li class="breadcrumb-item active">{{ dish.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- 菜品图片 -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="position-relative">
+                    {% if dish.image %}
+                    <img src="{{ dish.image.url }}" class="card-img-top" alt="{{ dish.name }}" style="height: 400px; object-fit: cover;">
+                    {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                        <i class="fas fa-utensils fa-5x text-muted"></i>
+                    </div>
+                    {% endif %}
+                    {% if not dish.is_available %}
+                    <div class="sold-out-badge">
+                        <span>已售罄</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 菜品信息 -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h2 class="card-title mb-0">{{ dish.name }}</h2>
+                        <span class="badge bg-primary">{{ dish.cuisine.name }}</span>
+                    </div>
+
+                    <p class="text-muted mb-4">{{ dish.description }}</p>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-dollar-sign text-primary me-2"></i>
+                                <div>
+                                    <small class="text-muted d-block">价格</small>
+                                    <span class="fs-4 fw-bold text-primary">¥{{ dish.price }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-chart-line text-primary me-2"></i>
+                                <div>
+                                    <small class="text-muted d-block">销量</small>
+                                    <span class="fs-4">{{ dish.sales_count }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-box text-primary me-2"></i>
+                                <div>
+                                    <small class="text-muted d-block">库存</small>
+                                    <span class="fs-4">{{ dish.stock }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-store text-primary me-2"></i>
+                                <div>
+                                    <small class="text-muted d-block">商家</small>
+                                    <a href="{% url 'merchant:merchant_detail' dish.merchant.id %}" class="text-decoration-none">
+                                        {{ dish.merchant.name }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if dish.is_available and dish.stock > 0 %}
+                    <form class="add-to-cart-form mb-4">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">数量</label>
+                                <div class="input-group">
+                                    <button type="button" class="btn btn-outline-secondary quantity-btn" data-action="decrease">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" class="form-control text-center" name="quantity" value="1" min="1" max="{{ dish.stock }}">
+                                    <button type="button" class="btn btn-outline-secondary quantity-btn" data-action="increase">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">总价</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">¥</span>
+                                    <input type="text" class="form-control" id="total-price" value="{{ dish.price }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mt-3">
+                            <i class="fas fa-cart-plus me-2"></i>加入购物车
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-warning mb-4">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        该商品暂时无法购买
+                    </div>
+                    {% endif %}
+
+                    <!-- 分享按钮 -->
+                    <div class="d-flex justify-content-center gap-3">
+                        <button class="btn btn-outline-primary" onclick="share('weixin')">
+                            <i class="fab fa-weixin me-1"></i>微信
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="share('weibo')">
+                            <i class="fab fa-weibo me-1"></i>微博
+                        </button>
+                        <button class="btn btn-outline-primary copy-link">
+                            <i class="fas fa-link me-1"></i>复制链接
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 推荐菜品 -->
+    {% if recommended_dishes %}
+    <div class="card mt-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-thumbs-up me-2"></i>相关推荐
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                {% for rec_dish in recommended_dishes %}
+                <div class="col-md-3">
+                    <div class="card h-100 dish-card">
+                        {% if rec_dish.image %}
+                        <img src="{{ rec_dish.image.url }}" class="card-img-top" alt="{{ rec_dish.name }}" style="height: 150px; object-fit: cover;">
+                        {% endif %}
+                        <div class="card-body">
+                            <h6 class="card-title mb-2">{{ rec_dish.name }}</h6>
+                            <p class="text-primary mb-0">¥{{ rec_dish.price }}</p>
+                        </div>
+                        <a href="{% url 'menu:dish_detail' rec_dish.id %}" class="stretched-link"></a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_css %}
+<style>
+    .sold-out-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: #dc3545;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 1rem;
+    }
+
+    .dish-card {
+        transition: transform 0.2s;
+    }
+
+    .dish-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .quantity-btn {
+        min-width: 40px;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // 数量加减按钮
+    $('.quantity-btn').click(function() {
+        const input = $(this).closest('.input-group').find('input');
+        const currentVal = parseInt(input.val());
+        const maxVal = parseInt(input.attr('max'));
+        
+        if ($(this).data('action') === 'increase' && currentVal < maxVal) {
+            input.val(currentVal + 1);
+        } else if ($(this).data('action') === 'decrease' && currentVal > 1) {
+            input.val(currentVal - 1);
+        }
+        
+        updateTotalPrice();
+    });
+
+    // 手动输入数量
+    $('input[name="quantity"]').on('input', function() {
+        updateTotalPrice();
+    });
+
+    // 更新总价
+    function updateTotalPrice() {
+        const quantity = parseInt($('input[name="quantity"]').val());
+        const price = {{ dish.price }};
+        $('#total-price').val((quantity * price).toFixed(2));
+    }
+
+    // 添加到购物车
+    $('.add-to-cart-form').submit(function(e) {
+        e.preventDefault();
+        const form = $(this);
+        const submitBtn = form.find('button[type="submit"]');
+        
+        submitBtn.prop('disabled', true)
+                .html('<i class="fas fa-spinner fa-spin me-2"></i>添加中...');
+        
+        $.post('/orders/cart/add/{{ dish.id }}/', {
+            'csrfmiddlewaretoken': '{{ csrf_token }}',
+            'quantity': form.find('input[name="quantity"]').val()
+        })
+        .done(function(response) {
+            submitBtn.html('<i class="fas fa-check me-2"></i>已添加')
+                    .removeClass('btn-primary')
+                    .addClass('btn-success');
+            
+            setTimeout(function() {
+                submitBtn.prop('disabled', false)
+                        .html('<i class="fas fa-cart-plus me-2"></i>加入购物车')
+                        .removeClass('btn-success')
+                        .addClass('btn-primary');
+            }, 2000);
+        })
+        .fail(function(xhr) {
+            submitBtn.html('<i class="fas fa-exclamation-circle me-2"></i>添加失败')
+                    .removeClass('btn-primary')
+                    .addClass('btn-danger');
+            
+            setTimeout(function() {
+                submitBtn.prop('disabled', false)
+                        .html('<i class="fas fa-cart-plus me-2"></i>加入购物车')
+                        .removeClass('btn-danger')
+                        .addClass('btn-primary');
+            }, 2000);
+        });
+    });
+
+    // 复制链接
+    $('.copy-link').click(function() {
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(function() {
+            const btn = $('.copy-link');
+            btn.html('<i class="fas fa-check me-1"></i>已复制')
+               .removeClass('btn-outline-primary')
+               .addClass('btn-success');
+            
+            setTimeout(function() {
+                btn.html('<i class="fas fa-link me-1"></i>复制链接')
+                   .removeClass('btn-success')
+                   .addClass('btn-outline-primary');
+            }, 2000);
+        });
+    });
+});
+
+// 分享功能
+function share(platform) {
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent('{{ dish.name }}');
+    const desc = encodeURIComponent('{{ dish.description }}');
+    
+    if (platform === 'weixin') {
+        // 实现微信分享
+        alert('请使用微信扫描二维码分享');
+    } else if (platform === 'weibo') {
+        window.open(`http://service.weibo.com/share/share.php?url=${url}&title=${title}`);
+    }
+}
+</script>
+{% endblock %}
+{% endblock %} 

@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <!-- 搜索和筛选区域 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" name="search" placeholder="搜索商家..." value="{{ request.GET.search }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="sort">
+                        <option value="">排序方式</option>
+                        <option value="rating" {% if request.GET.sort == 'rating' %}selected{% endif %}>评分最高</option>
+                        <option value="sales" {% if request.GET.sort == 'sales' %}selected{% endif %}>销量最高</option>
+                        <option value="newest" {% if request.GET.sort == 'newest' %}selected{% endif %}>最新加入</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="status">
+                        <option value="">营业状态</option>
+                        <option value="open" {% if request.GET.status == 'open' %}selected{% endif %}>营业中</option>
+                        <option value="closed" {% if request.GET.status == 'closed' %}selected{% endif %}>休息中</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">筛选</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 商家列表 -->
+    <div class="row g-4">
+        {% for merchant in merchants %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                {% if merchant.logo %}
+                <img src="{{ merchant.logo.url }}" class="card-img-top" alt="{{ merchant.name }}" style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-store fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title mb-0">{{ merchant.name }}</h5>
+                        <span class="badge {% if merchant.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ merchant.is_active|yesno:"营业中,休息中" }}
+                        </span>
+                    </div>
+                    <p class="card-text text-muted small mb-3">{{ merchant.description|truncatechars:100 }}</p>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                            <small>{{ merchant.address }}</small>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-phone text-primary me-2"></i>
+                            <small>{{ merchant.phone }}</small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="rating">
+                            {% with ''|center:5 as range %}
+                            {% for _ in range %}
+                                <i class="fas fa-star {% if forloop.counter <= merchant.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                            {% endfor %}
+                            {% endwith %}
+                            <small class="text-muted ms-1">({{ merchant.review_count }}条评价)</small>
+                        </div>
+                        <a href="{% url 'merchant:merchant_detail' merchant.id %}" class="btn btn-outline-primary btn-sm">
+                            查看详情
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-store-slash fa-3x text-muted mb-3"></i>
+                <h4>暂无商家</h4>
+                <p class="text-muted">没有找到符合条件的商家</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- 分页 -->
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                    {{ num }}
+                </a>
+            </li>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+{% block extra_css %}
+<style>
+    .card {
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    .rating {
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+{% endblock %} 

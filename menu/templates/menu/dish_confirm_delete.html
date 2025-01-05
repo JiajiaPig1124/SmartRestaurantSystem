@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>删除菜品</h2>
+    <p>确定要删除 "{{ object.name }}" 吗？</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">确认删除</button>
+        <a href="{% url 'menu:dish_list' %}" class="btn btn-secondary">取消</a>
+    </form>
+</div>
+{% endblock %} 

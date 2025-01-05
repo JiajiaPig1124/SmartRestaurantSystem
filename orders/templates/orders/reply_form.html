@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h4>回复评价</h4>
+                </div>
+                <div class="card-body">
+                    <div class="review-content mb-4">
+                        <h5>用户评价</h5>
+                        <p>评分：{{ review.get_rating_display }}</p>
+                        <p>{{ review.comment }}</p>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button type="submit" class="btn btn-primary">提交回复</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

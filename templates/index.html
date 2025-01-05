@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- 主页横幅 -->
+<div class="hero-section text-center py-5 mb-5" style="background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('{% static 'images/hero-bg.jpg' %}') center/cover; color: white; padding: 100px 0;">
+    <div class="container">
+        <h1 class="display-4 mb-4">美食触手可得</h1>
+        <p class="lead mb-4">探索城市美食，享受便捷点餐体验</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'menu:dish_list' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-utensils me-2"></i>浏览菜单
+            </a>
+            {% if not user.is_authenticated %}
+            <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-lg">
+                <i class="fas fa-user-plus me-2"></i>立即注册
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 特色功能 -->
+<div class="container mb-5">
+    <h2 class="text-center mb-4">我们的特色</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 text-center p-4">
+                <div class="card-body">
+                    <i class="fas fa-mobile-alt fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title">便捷点餐</h5>
+                    <p class="card-text">随时随地，轻松点餐，无需等待</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 text-center p-4">
+                <div class="card-body">
+                    <i class="fas fa-percent fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title">优惠活动</h5>
+                    <p class="card-text">丰富的优惠活动，为您节省更多</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 text-center p-4">
+                <div class="card-body">
+                    <i class="fas fa-star fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title">品质保证</h5>
+                    <p class="card-text">精选商家，确保用餐品质</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 热门商家 -->
+<div class="container mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">热门商家</h2>
+        <a href="{% url 'merchant:merchant_list' %}" class="btn btn-outline-primary">
+            查看全部 <i class="fas fa-arrow-right ms-2"></i>
+        </a>
+    </div>
+    <div class="row g-4">
+        {% for merchant in popular_merchants|slice:":3" %}
+        <div class="col-md-4">
+            <div class="card h-100">
+                {% if merchant.logo %}
+                <img src="{{ merchant.logo.url }}" class="card-img-top" alt="{{ merchant.name }}" style="height: 200px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ merchant.name }}</h5>
+                    <p class="card-text text-muted">{{ merchant.description|truncatechars:100 }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="rating">
+                            {% for i in "12345"|make_list %}
+                            <i class="fas fa-star {% if forloop.counter <= merchant.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                            {% endfor %}
+                        </div>
+                        <a href="{% url 'merchant:merchant_detail' merchant.id %}" class="btn btn-primary">
+                            查看详情
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- 最新优惠 -->
+<div class="container mb-5">
+    <h2 class="text-center mb-4">最新优惠</h2>
+    <div class="row g-4">
+        {% for promotion in latest_promotions|slice:":3" %}
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <span class="badge bg-primary mb-2">{{ promotion.get_promotion_type_display }}</span>
+                    <h5 class="card-title">{{ promotion.title }}</h5>
+                    <p class="card-text">{{ promotion.description|truncatechars:100 }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="far fa-clock me-1"></i>
+                            {{ promotion.end_time|date:"Y-m-d" }}截止
+                        </small>
+                        <a href="{% url 'merchant:merchant_detail' promotion.merchant.id %}" class="btn btn-outline-primary btn-sm">
+                            去看看
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        border-radius: 15px;
+        margin-top: -1rem;
+    }
+    
+    .card {
+        overflow: hidden;
+    }
+    
+    .card img {
+        transition: transform 0.3s ease;
+    }
+    
+    .card:hover img {
+        transform: scale(1.05);
+    }
+    
+    .rating {
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %} 

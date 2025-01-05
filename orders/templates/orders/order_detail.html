@@ -1,0 +1,370 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- 订单状态进度条 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="order-progress">
+                <div class="progress-track">
+                    <div class="progress" style="width: {{ order.get_progress_percentage }}%"></div>
+                </div>
+                <div class="progress-steps">
+                    <div class="progress-step {% if order.status != 'pending' %}completed{% endif %} {% if order.status == 'pending' %}current{% endif %}">
+                        <div class="step-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="step-label">待付款</div>
+                    </div>
+                    <div class="progress-step {% if order.status == 'confirmed' %}current{% endif %} {% if order.status in 'processing,completed' %}completed{% endif %}">
+                        <div class="step-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="step-label">已确认</div>
+                    </div>
+                    <div class="progress-step {% if order.status == 'processing' %}current{% endif %} {% if order.status == 'completed' %}completed{% endif %}">
+                        <div class="step-icon">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <div class="step-label">制作中</div>
+                    </div>
+                    <div class="progress-step {% if order.status == 'completed' %}current completed{% endif %}">
+                        <div class="step-icon">
+                            <i class="fas fa-check-double"></i>
+                        </div>
+                        <div class="step-label">已完成</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 订单信息 -->
+        <div class="col-lg-8">
+            <!-- 基本信息 -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>订单信息
+                    </h5>
+                    <span class="badge bg-light text-primary">{{ order.get_status_display }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="text-muted">订单编号</label>
+                                <div>{{ order.order_number }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="text-muted">下单时间</label>
+                                <div>{{ order.created_at|date:"Y-m-d H:i:s" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="text-muted">配送方式</label>
+                                <div>{{ order.get_order_type_display }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="text-muted">支付方式</label>
+                                <div>{{ order.payment.get_payment_method_display }}</div>
+                            </div>
+                        </div>
+                        {% if order.order_type == 'takeaway' %}
+                        <div class="col-12">
+                            <div class="info-item">
+                                <label class="text-muted">配送地址</label>
+                                <div>{{ order.address }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if order.notes %}
+                        <div class="col-12">
+                            <div class="info-item">
+                                <label class="text-muted">订单备注</label>
+                                <div>{{ order.notes }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 商品清单 -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>商品清单
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for item in order.orderitem_set.all %}
+                    <div class="order-item mb-3">
+                        <div class="row align-items-center">
+                            <div class="col-2">
+                                {% if item.dish.image %}
+                                <img src="{{ item.dish.image.url }}" alt="{{ item.dish.name }}" class="img-fluid rounded">
+                                {% endif %}
+                            </div>
+                            <div class="col-6">
+                                <h6 class="mb-1">{{ item.dish.name }}</h6>
+                                <small class="text-muted">{{ item.dish.merchant.name }}</small>
+                            </div>
+                            <div class="col-2 text-center">
+                                <span class="text-muted">x{{ item.quantity }}</span>
+                            </div>
+                            <div class="col-2 text-end">
+                                <span class="text-primary">¥{{ item.price }}</span>
+                            </div>
+                        </div>
+                        {% if not forloop.last %}<hr class="my-3">{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 订单评价 -->
+            {% if order.status == 'completed' and not order.review %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">订单评价</h5>
+                    <form method="post" action="{% url 'orders:create_review' order.id %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">评分</label>
+                            <div class="rating">
+                                {% for i in "12345"|make_list %}
+                                <input type="radio" name="rating" value="{{ forloop.counter }}" id="star{{ forloop.counter }}" required>
+                                <label for="star{{ forloop.counter }}"><i class="fas fa-star"></i></label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">评价内容</label>
+                            <textarea class="form-control" name="comment" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">上传图片（可选）</label>
+                            <input type="file" class="form-control" name="images" multiple accept="image/*">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>提交评价
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 订单操作 -->
+        <div class="col-lg-4">
+            <!-- 金额信息 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">金额明细</h5>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">商品总额</span>
+                        <span>¥{{ order.total_amount }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">配送费</span>
+                        <span>¥0.00</span>
+                    </div>
+                    {% if order.promotion %}
+                    <div class="d-flex justify-content-between mb-2 text-success">
+                        <span>优惠金额</span>
+                        <span>-¥{{ order.discount_amount }}</span>
+                    </div>
+                    {% endif %}
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold">实付金额</span>
+                        <span class="fw-bold text-primary fs-4">¥{{ order.total_amount }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">订单操作</h5>
+                    {% if order.status == 'pending' %}
+                    <a href="{% url 'orders:pay_order' order.id %}" class="btn btn-primary w-100 mb-3">
+                        <i class="fas fa-credit-card me-2"></i>立即支付
+                    </a>
+                    <button class="btn btn-outline-danger w-100 cancel-order" data-order-id="{{ order.id }}">
+                        <i class="fas fa-times me-2"></i>取消订单
+                    </button>
+                    {% endif %}
+
+                    {% if order.status == 'completed' and not order.review %}
+                    <a href="#" class="btn btn-primary w-100">
+                        <i class="fas fa-star me-2"></i>评价订单
+                    </a>
+                    {% endif %}
+
+                    <a href="{% url 'orders:order_list' %}" class="btn btn-outline-secondary w-100 mt-3">
+                        <i class="fas fa-arrow-left me-2"></i>返回订单列表
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .order-progress {
+        position: relative;
+        padding: 20px 0;
+    }
+
+    .progress-track {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background-color: #e9ecef;
+        transform: translateY(-50%);
+    }
+
+    .progress {
+        height: 100%;
+        background-color: var(--primary-color);
+        transition: width 0.3s ease;
+    }
+
+    .progress-steps {
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .progress-step {
+        position: relative;
+        text-align: center;
+        min-width: 100px;
+    }
+
+    .step-icon {
+        width: 40px;
+        height: 40px;
+        background-color: #fff;
+        border: 2px solid #e9ecef;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        color: #6c757d;
+        transition: all 0.3s ease;
+    }
+
+    .progress-step.current .step-icon {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    .progress-step.completed .step-icon {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: #fff;
+    }
+
+    .step-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+
+    .progress-step.current .step-label {
+        color: var(--primary-color);
+        font-weight: bold;
+    }
+
+    .info-item {
+        margin-bottom: 0.5rem;
+    }
+
+    .info-item label {
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .rating {
+        display: flex;
+        flex-direction: row-reverse;
+        gap: 0.5rem;
+    }
+
+    .rating input {
+        display: none;
+    }
+
+    .rating label {
+        cursor: pointer;
+        color: #ddd;
+        font-size: 1.5rem;
+    }
+
+    .rating input:checked ~ label {
+        color: #ffc107;
+    }
+
+    .rating label:hover,
+    .rating label:hover ~ label {
+        color: #ffc107;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // 取消订单
+    $('.cancel-order').click(function() {
+        if (confirm('确定要取消订单吗？')) {
+            const orderId = $(this).data('order-id');
+            $.post('/orders/cancel/' + orderId + '/', {
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            })
+            .done(function() {
+                location.reload();
+            })
+            .fail(function() {
+                alert('取消失败，请重试');
+            });
+        }
+    });
+
+    // 图片预览
+    $('input[type="file"]').change(function() {
+        const files = this.files;
+        const previewContainer = $('<div class="image-preview mt-2 d-flex gap-2"></div>');
+        
+        for (let i = 0; i < files.length; i++) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewContainer.append(`
+                    <div class="preview-item" style="width: 100px; height: 100px;">
+                        <img src="${e.target.result}" class="img-fluid rounded" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                `);
+            }
+            reader.readAsDataURL(files[i]);
+        }
+        
+        $('.image-preview').remove();
+        $(this).after(previewContainer);
+    });
+});
+</script>
+{% endblock %}
+{% endblock %} 
